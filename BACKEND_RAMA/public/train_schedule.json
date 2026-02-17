@@ -1,0 +1,72 @@
+{
+  "help": "https://data.renfe.com/api/3/action/help_show?name=datastore_search",
+  "success": true,
+  "result": {
+    "include_total": true,
+    "limit": 5,
+    "records_format": "objects",
+    "resource_id": "a2368cff-1562-4dde-8466-9635ea3a572a",
+    "total_estimation_threshold": null,
+    "records": [
+      {
+        "_id": 1,
+        "train_number": "18063",
+        "origin": "MADRID-CHAMARTIN",
+        "destination": "ARANJUEZ",
+        "departure_time": "08:30:00",
+        "arrival_time": "10:22:00",
+        "line": "C-3",
+        "status": "On Time"
+      },
+      {
+        "_id": 2,
+        "train_number": "03092",
+        "origin": "PARLA",
+        "destination": "ALCOBENDAS-S.SEBASTIAN DE LOS REYES",
+        "departure_time": "09:00:00",
+        "arrival_time": "11:30:00",
+        "line": "C-4",
+        "status": "Delayed 10m"
+      }
+    ],
+    "fields": [
+      {
+        "id": "_id",
+        "type": "int"
+      },
+      {
+        "id": "train_number",
+        "type": "text"
+      },
+      {
+        "id": "origin",
+        "type": "text"
+      },
+      {
+        "id": "destination",
+        "type": "text"
+      },
+      {
+        "id": "departure_time",
+        "type": "time"
+      },
+      {
+        "id": "arrival_time",
+        "type": "time"
+      },
+      {
+        "id": "line",
+        "type": "text"
+      },
+      {
+        "id": "status",
+        "type": "text"
+      }
+    ],
+    "_links": {
+      "start": "/api/3/action/datastore_search?limit=5&resource_id=a2368cff-1562-4dde-8466-9635ea3a572a",
+      "next": "/api/3/action/datastore_search?offset=5&limit=5&resource_id=a2368cff-1562-4dde-8466-9635ea3a572a"
+    },
+    "total": 5
+  }
+}

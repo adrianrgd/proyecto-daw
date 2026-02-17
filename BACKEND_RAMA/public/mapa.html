@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/ol@v8.2.0/ol.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/map.css" />
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <div id="popup" class="ol-popup">
+      <a id="popup-closer" class="popup-closer">×</a>
+      <div class="popup-header">
+        <div id="popup-title" class="st-name"></div>
+      </div>
+      <div class="popup-content">
+        <div id="acc-area"></div>
+
+        <div id="c-section">
+          <div class="section-label">
+            <i class="fas fa-train"></i> Líneas Cercanías
+          </div>
+          <div id="c-logos" class="logo-flex"></div>
+        </div>
+
+        <div id="m-section" style="display: none">
+          <div class="section-label"><i class="fas fa-subway"></i> Metro</div>
+          <div id="m-logos" class="logo-flex"></div>
+        </div>
+
+        <div class="times-section">
+          <div class="times-header">
+            <span>Próximos Trenes</span>
+            <span><i class="far fa-clock"></i> Real</span>
+          </div>
+          <div id="live-times-area"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ol@v8.2.0/dist/ol.js"></script>
+    <script type="module" src="js/map-interact.js"></script>
+  </body>
+</html>
