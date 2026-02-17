@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reportar - Madrid Movilidad</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/extra.css" />
+  </head>
+  <body>
+    <nav class="main-nav">
+      <div class="nav-brand">Madrid Movilidad</div>
+      <div class="nav-links">
+        <a href="index.html"><i class="fas fa-map-marked-alt"></i> Mapa</a>
+        <a href="feed.html"><i class="fas fa-newspaper"></i> Muro</a>
+        <a href="reportar.html" class="active"
+          ><i class="fas fa-bullhorn"></i> Reportar</a
+        >
+      </div>
+    </nav>
+
+    <div class="report-form">
+      <h2>Reportar Nueva Incidencia</h2>
+      <form id="form-incidencia">
+        <div class="form-group">
+          <label>Título Corto</label>
+          <input
+            type="text"
+            name="titulo"
+            placeholder="Ej: Escalera rota"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Servicio</label>
+          <select name="servicio" id="select-servicio" onchange="updateLines()">
+            <option value="Metro">Metro</option>
+            <option value="Cercanías">Cercanías</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Línea</label>
+          <select name="linea" id="select-linea">
+            <!-- Se llena con JS -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Estación / Parada</label>
+          <input type="text" name="estacion" placeholder="Ej: Sol" required />
+        </div>
+
+        <div class="form-group">
+          <label>Descripción Detallada</label>
+          <textarea
+            name="descripcion"
+            rows="4"
+            placeholder="Detalles extra..."
+          ></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">Enviar Reporte</button>
+      </form>
+    </div>
+
+    <script src="js/notifications.js"></script>
+    <script src="js/simulation.js"></script>
+    <script>
+      const lineas = {
+        Metro: ["L-1", "L-2", "L-3", "L-4", "L-5", "L-6", "L-10", "L-12"],
+        Cercanías: ["C-1", "C-2", "C-3", "C-4", "C-5", "C-7", "C-8", "C-10"],
+      };
+
+      function updateLines() {
+        const servicio = document.getElementById("select-servicio").value;
+        const selectLinea = document.getElementById("select-linea");
+        selectLinea.innerHTML = "";
+
+        lineas[servicio].forEach((l) => {
+          const opt = document.createElement("option");
+          opt.value = l;
+          opt.textContent = l;
+          selectLinea.appendChild(opt);
+        });
+      }
+
+      // Inicializar líneas
+      updateLines();
+
+      // Manejar envío
+      document
+        .getElementById("form-incidencia")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const formData = new FormData(e.target);
+          const data = Object.fromEntries(formData.entries());
+
+          // Añadir ID del usuario simulado
+          const currentUser = window.Simulation.getCurrentUser();
+          if (!currentUser) {
+            Toast.show("Error: Usuario no cargado.", "error");
+            return;
+          }
+          data.usuarioId = currentUser.id;
+
+          try {
+            const res = await fetch("/api/incidencias", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            });
+
+            if (res.ok) {
+              Toast.show("¡Incidencia reportada con éxito!", "success");
+              setTimeout(() => {
+                window.location.href = "feed.html"; // Redirect to feed
+              }, 1500);
+            } else {
+              Toast.show("Error al enviar el reporte", "error");
+            }
+          } catch (err) {
+            console.error(err);
+            Toast.show("Error de conexión con el servidor", "error");
+          }
+        });
+    </script>
+  </body>
+</html>

@@ -28,6 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
     mapFrame.addEventListener("load", () => {
       console.log("✅ Iframe del mapa cargado");
       iframeReady = true;
+      setTimeout(cargarIncidenciasEnMapa, 1000); // Pequeño retardo para asegurar que el mapa (Child) esté listo
     });
   }
 
@@ -53,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("📤 Enviando mensaje TOGGLE_LAYER al iframe:", isActive);
         mapFrame.contentWindow.postMessage(
           { type: "TOGGLE_LAYER", visible: isActive },
-          "*"
+          "*",
         );
       }
     });
@@ -80,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("📤 Enviando mensaje TOGGLE_METRO al iframe:", isActive);
         mapFrame.contentWindow.postMessage(
           { type: "TOGGLE_METRO", visible: isActive },
-          "*"
+          "*",
         );
       }
     });
@@ -142,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (routeGroup) {
           routeGroup.parentNode.insertBefore(
             scheduleContainer,
-            routeGroup.nextSibling
+            routeGroup.nextSibling,
           );
         }
       }
@@ -185,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
              </div>
           </div>
         </div>
-      `
+      `,
         )
         .join("");
 
@@ -289,12 +290,12 @@ document.addEventListener("DOMContentLoaded", () => {
                   i === 0
                     ? "origin"
                     : i === ruta.estaciones.length - 1
-                    ? "destination"
-                    : ""
+                      ? "destination"
+                      : ""
                 }"></span>
                 <span class="route-station-name">${est}</span>
               </div>
-            `
+            `,
               )
               .join("")}
           </div>
@@ -326,7 +327,7 @@ document.addEventListener("DOMContentLoaded", () => {
           type: hasFilters ? "FILTER_METRO" : "RESET_METRO_FILTER",
           lineCodes: selectedMetroLines,
         },
-        "*"
+        "*",
       );
       btnResetMetroFilter.style.display = hasFilters ? "inline-block" : "none";
     } else {
@@ -345,7 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
           type: hasFilters ? "FILTER_LINES" : "RESET_FILTER",
           lineCodes: selectedLines,
         },
-        "*"
+        "*",
       );
       btnResetFilter.style.display = hasFilters ? "inline-block" : "none";
     }
@@ -374,5 +375,25 @@ document.addEventListener("DOMContentLoaded", () => {
         .forEach((el) => el.classList.remove("selected"));
       btnResetMetroFilter.style.display = "none";
     });
+  }
+  // --- 7. CARGAR INCIDENCIAS ---
+  async function cargarIncidenciasEnMapa() {
+    try {
+      const res = await fetch("/api/incidencias");
+      const incidencias = await res.json();
+
+      if (mapFrame && mapFrame.contentWindow) {
+        console.log("📤 Enviando incidencias al mapa:", incidencias.length);
+        mapFrame.contentWindow.postMessage(
+          {
+            type: "SHOW_INCIDENTS",
+            incidents: incidencias,
+          },
+          "*",
+        );
+      }
+    } catch (err) {
+      console.error("Error cargando incidencias:", err);
+    }
   }
 });

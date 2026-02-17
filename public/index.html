@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
@@ -14,17 +14,19 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
+    <link rel="stylesheet" href="css/extra.css" />
   </head>
   <body>
-    <header class="header">
-      <div class="logo-section">
-        <img src="img/cercanias.svg" alt="Renfe" class="header-logo" />
-        <div class="logo-text">
-          <h1>Madrid Movilidad</h1>
-          <p>Gestión de Transporte Multimodal</p>
-        </div>
+    <nav class="main-nav">
+      <div class="nav-brand">Madrid Movilidad</div>
+      <div class="nav-links">
+        <a href="index.html" class="active"
+          ><i class="fas fa-map-marked-alt"></i> Mapa</a
+        >
+        <a href="feed.html"><i class="fas fa-newspaper"></i> Muro</a>
+        <a href="reportar.html"><i class="fas fa-bullhorn"></i> Reportar</a>
       </div>
-    </header>
+    </nav>
 
     <main class="main-content">
       <aside class="sidebar">
@@ -212,6 +214,8 @@
       </section>
     </main>
 
+    <script src="js/notifications.js"></script>
+    <script src="js/simulation.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>
 </html>

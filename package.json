@@ -1,29 +1,27 @@
 {
-  "name": "madrid-movilidad",
-  "version": "0.1.0",
-  "private": true,
+  "name": "repo-daw-proyecto",
+  "version": "1.0.0",
+  "description": "- NodeJS (https://nodejs.org/es)",
+  "main": "index.js",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server/server.js",
+    "seed": "node server/seed.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adrianrgd/proyecto-daw.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/adrianrgd/proyecto-daw/issues"
+  },
+  "homepage": "https://github.com/adrianrgd/proyecto-daw#readme",
   "dependencies": {
-    "@types/ol": "^6.5.3",
-    "axios": "^1.13.2",
-    "next": "16.1.2",
-    "ol": "^10.7.0",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.2",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "express": "^5.2.1",
+    "multer": "^2.0.2",
+    "sqlite3": "^5.1.7"
   }
 }

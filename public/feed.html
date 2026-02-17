@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Muro de Incidencias - Madrid Movilidad</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/extra.css" />
+  </head>
+  <body>
+    <nav class="main-nav">
+      <div class="nav-brand">Madrid Movilidad</div>
+      <div class="nav-links">
+        <a href="index.html"><i class="fas fa-map-marked-alt"></i> Mapa</a>
+        <a href="feed.html" class="active"
+          ><i class="fas fa-newspaper"></i> Muro</a
+        >
+        <a href="reportar.html"><i class="fas fa-bullhorn"></i> Reportar</a>
+      </div>
+    </nav>
+
+    <div class="page-header">
+      <h2>Últimas Incidencias</h2>
+    </div>
+
+    <div class="feed-container">
+      <h1>Últimas Incidencias</h1>
+      <div id="feed-list">
+        <!-- Incidencias cargadas con JS -->
+        <p>Cargando incidencias...</p>
+      </div>
+    </div>
+
+    <div id="feed-list" class="feed-container">
+      <!-- Incidencias aquí -->
+    </div>
+
+    <script src="js/notifications.js"></script>
+    <script src="js/simulation.js"></script>
+    <script>
+      async function loadFeed() {
+        const container = document.getElementById("feed-list");
+        try {
+          const res = await fetch("/api/incidencias");
+          const data = await res.json();
+
+          container.innerHTML = "";
+
+          data.forEach((inc) => {
+            const card = document.createElement("div");
+            card.className = "incident-card";
+            card.innerHTML = `
+                <div class="incident-header">
+                    <span class="user-info">
+                        <div class="user-avatar-icon"><i class="${inc.usuarioAvatar || "fas fa-user"}"></i></div>
+                        ${inc.usuarioNombre}
+                    </span>
+                    <span class="service-badge bg-${inc.servicio.toLowerCase()}">${inc.servicio} | ${inc.linea}</span>
+                </div>
+                <div class="incident-body">
+                    <h3>${inc.titulo}</h3>
+                    <p>${inc.descripcion}</p>
+                    <small><i class="fas fa-map-marker-alt"></i> ${inc.estacion}</small>
+                </div>
+                <div class="incident-footer">
+                    <span>${inc.votos} <i class="fas fa-thumbs-up"></i></span>
+                    <button class="vote-btn" onclick="votar(${inc.id}, 'positivo')"><i class="fas fa-check"></i> Verdad</button>
+                    <button class="vote-btn" onclick="votar(${inc.id}, 'negativo')"><i class="fas fa-times"></i> Falso</button>
+                </div>
+            `;
+            container.appendChild(card);
+          });
+        } catch (err) {
+          container.innerHTML = "<p>Error al cargar el muro.</p>";
+        }
+      }
+
+      async function votar(id, tipo) {
+        // ... implementation to call POST /api/incidencias/:id/votar ...
+        const currentUser = window.Simulation.getCurrentUser();
+        if (!currentUser) {
+          Toast.show("Error: Usuario no cargado.", "error");
+          return;
+        }
+
+        try {
+          const res = await fetch(`/api/incidencias/${id}/votar`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tipo, usuarioId: currentUser.id }),
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            Toast.show(`Voto registrado (${tipo})`, "success");
+            loadFeed(); // Recargar para ver cambios
+          } else {
+            Toast.show("Ya has votado en esta incidencia", "warning");
+          }
+        } catch (err) {
+          console.error(err);
+          Toast.show("Error de conexión", "error");
+        }
+      }
+
+      // Cargar al inicio
+      loadFeed();
+    </script>
+  </body>
+</html>

@@ -43,9 +43,9 @@ async function cargarHorarios(codigoEstacion) {
     // Mostramos máx 6 trenes para Metro
     const maxTrenes = 6;
     data.slice(0, maxTrenes).forEach((tren, index) => {
-      const retrasoClass = tren.retraso > 0 ? 'train-row-delayed' : '';
-      const retrasoText = tren.retraso > 0 ? ` (+${tren.retraso}min)` : '';
-      
+      const retrasoClass = tren.retraso > 0 ? "train-row-delayed" : "";
+      const retrasoText = tren.retraso > 0 ? ` (+${tren.retraso}min)` : "";
+
       html += `
         <div class="train-row ${retrasoClass}" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">
           <div class="train-row-header">
@@ -68,16 +68,16 @@ async function cargarHorarios(codigoEstacion) {
            </div>
            <div class="train-detail-row">
               <span class="train-detail-label">Estado:</span>
-              <span class="train-detail-value status-${tren.status.toLowerCase().replace(/\\s+/g, '-')}">${tren.status}</span>
+              <span class="train-detail-value status-${tren.status.toLowerCase().replace(/\\s+/g, "-")}">${tren.status}</span>
            </div>
         </div>
       `;
     });
-    
+
     if (data.length > maxTrenes) {
       html += `<div class="train-info-text">+${data.length - maxTrenes} trenes más</div>`;
     }
-    
+
     liveArea.innerHTML = html;
   } catch (error) {
     console.error("Error al cargar horarios:", error);
@@ -94,7 +94,7 @@ function parseMetroLogos(str) {
 
   // Ramal
   if (text.includes("ramal")) files.add("R");
-  
+
   // MetroSur (Línea 12)
   if (text.includes("metrosur")) files.add("L12");
 
@@ -117,10 +117,10 @@ function parseMetroLogos(str) {
 // Estilo hover para estaciones (mejorado)
 function getHoverStationStyle(feature, resolution) {
   const zoom = 20 - Math.log2(resolution);
-  
+
   // Detectar si es Metro o Cercanías
   const isMetro = feature.get("DENOMINACIONESTACION") || feature.get("ROTULO");
-  
+
   let baseScale = isMetro ? 0.04 : 0.8;
   let multiplier = isMetro ? 0.01 : 0.15;
 
@@ -151,7 +151,7 @@ function getHoverStationStyle(feature, resolution) {
     feature.get("DENOMINACIONESTACION") ||
     feature.get("ROTULO") ||
     "";
-  
+
   styles.push(
     new ol.style.Style({
       text: new ol.style.Text({
@@ -163,7 +163,7 @@ function getHoverStationStyle(feature, resolution) {
         textAlign: "center",
       }),
       zIndex: 199,
-    })
+    }),
   );
 
   return styles;
@@ -231,9 +231,13 @@ function setupLayerInteractions() {
   // Cercanías
   if (stationLayer) {
     map.on("click", function (evt) {
-      const feature = map.forEachFeatureAtPixel(evt.pixel, function (feature) {
-        return feature;
-      }, { layers: [stationLayer] });
+      const feature = map.forEachFeatureAtPixel(
+        evt.pixel,
+        function (feature) {
+          return feature;
+        },
+        { layers: [stationLayer] },
+      );
 
       if (feature) {
         mostrarDetallesEstacion(feature, evt.coordinate);
@@ -246,9 +250,13 @@ function setupLayerInteractions() {
   // Metro
   if (metroStationLayer) {
     map.on("click", function (evt) {
-      const feature = map.forEachFeatureAtPixel(evt.pixel, function (feature) {
-        return feature;
-      }, { layers: [metroStationLayer] });
+      const feature = map.forEachFeatureAtPixel(
+        evt.pixel,
+        function (feature) {
+          return feature;
+        },
+        { layers: [metroStationLayer] },
+      );
 
       if (feature) {
         mostrarDetallesEstacion(feature, evt.coordinate);
@@ -278,3 +286,98 @@ setupLayerInteractions();
 
 // Exportar para uso externo
 export { cargarHorarios, parseMetroLogos, mostrarDetallesEstacion };
+
+// --- LOGICA DE INCIDENCIAS (NUEVO) ---
+let incidentLayer = null;
+
+window.addEventListener("message", (event) => {
+  if (event.data.type === "SHOW_INCIDENTS") {
+    showIncidents(event.data.incidents);
+  }
+});
+
+function showIncidents(incidents) {
+  if (!incidents || incidents.length === 0) return;
+
+  if (!incidentLayer) {
+    incidentLayer = new ol.layer.Vector({
+      source: new ol.source.Vector(),
+      style: new ol.style.Style({
+        image: new ol.style.Circle({
+          radius: 12,
+          fill: new ol.style.Fill({ color: "#ff4444" }),
+          stroke: new ol.style.Stroke({ color: "white", width: 3 }),
+        }),
+        text: new ol.style.Text({
+          text: "!",
+          fill: new ol.style.Fill({ color: "white" }),
+          font: "bold 16px sans-serif",
+          offsetY: 1,
+        }),
+      }),
+      zIndex: 1000, // Por encima de todo
+    });
+    map.addLayer(incidentLayer);
+
+    // Añadir interacción de click para incidencias
+    map.on("click", (evt) => {
+      const feature = map.forEachFeatureAtPixel(evt.pixel, (f) => f, {
+        layers: [incidentLayer],
+      });
+      if (feature) {
+        const props = feature.getProperties();
+        // alert(`⚠️ INCIDENCIA: ${props.titulo}\n\n${props.descripcion}\nReportado por: ${props.usuario}`);
+        Toast.show(
+          `<b>${props.titulo}</b><br>${props.descripcion}<br><small>Por: ${props.usuario}</small>`,
+          "warning",
+        );
+      }
+    });
+  }
+
+  const source = incidentLayer.getSource();
+  source.clear();
+
+  // Buscar coordenadas de las estaciones afectadas
+  // Recorremos las capas de estaciones para encontrar coincidencias por nombre
+  const featuresGeneradas = [];
+
+  const todasEstaciones = [
+    ...(stationLayer ? stationLayer.getSource().getFeatures() : []),
+    ...(metroStationLayer ? metroStationLayer.getSource().getFeatures() : []),
+  ];
+
+  incidents.forEach((inc) => {
+    // Normalizar nombres para comparar
+    const nombreBusqueda = inc.estacion.toLowerCase().trim();
+
+    const estacionFeature = todasEstaciones.find((f) => {
+      const nombre = (
+        f.get("NOMBRE_ESTACION") ||
+        f.get("DENOMINACIONESTACION") ||
+        f.get("ROTULO") ||
+        ""
+      )
+        .toLowerCase()
+        .trim();
+      return nombre.includes(nombreBusqueda) || nombreBusqueda.includes(nombre);
+    });
+
+    if (estacionFeature) {
+      const coords = estacionFeature.getGeometry().getCoordinates();
+      const incFeature = new ol.Feature({
+        geometry: new ol.geom.Point(coords),
+        titulo: inc.titulo,
+        descripcion: inc.descripcion,
+        usuario: inc.usuarioNombre,
+        servicio: inc.servicio,
+      });
+      featuresGeneradas.push(incFeature);
+    }
+  });
+
+  source.addFeatures(featuresGeneradas);
+  console.log(
+    `📍 Mostrando ${featuresGeneradas.length} incidencias en el mapa.`,
+  );
+}
