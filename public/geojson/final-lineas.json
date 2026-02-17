@@ -1,0 +1,62 @@
+[
+    {
+        "linea": "C1",
+        "codEstacionOrigen": 17000,
+        "codEstacionFinal": 98305
+    },
+    {
+        "linea": "C2",
+        "codEstacionOrigen": 70200,
+        "codEstacionFinal": 17000
+    },
+    {
+        "linea": "C3",
+        "codEstacionOrigen": 60200,
+        "codEstacionFinal": 17000
+    },
+    {
+        "linea": "C4a",
+        "codEstacionOrigen": 37012,
+        "codEstacionFinal": 19003
+    },
+    {
+        "linea": "C4b",
+        "codEstacionOrigen": 37012,
+        "codEstacionFinal": 17005
+    },
+    {
+        "linea": "C5",
+        "codEstacionOrigen": 35607,
+        "codEstacionFinal": 35012
+    },
+    {
+        "linea": "C7",
+        "codEstacionOrigen": 70103,
+        "codEstacionFinal": 10000
+    },
+    {
+        "linea": "C8",
+        "codEstacionOrigen": 70200,
+        "codEstacionFinal": 10200
+    },
+    {
+        "linea": "C8a",
+        "codEstacionOrigen": 18000,
+        "codEstacionFinal": 10206
+    },
+    {
+        "linea": "C8b",
+        "codEstacionOrigen": 10200,
+        "codEstacionFinal": 12006
+    },
+    {
+        "linea": "C9",
+        "codEstacionOrigen": 12006,
+        "codEstacionFinal": 12023
+    },
+    {
+        "linea": "C10",
+        "codEstacionOrigen": 10200,
+        "codEstacionFinal": 17000
+    }
+]

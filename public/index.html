@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Madrid Movilidad - Dashboard</title>
+    <link rel="icon" type="image" href="img/localizacion.png" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <header class="header">
+      <div class="logo-section">
+        <img src="img/cercanias.svg" alt="Renfe" class="header-logo" />
+        <div class="logo-text">
+          <h1>Madrid Movilidad</h1>
+          <p>Gestión de Transporte Multimodal</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <aside class="sidebar">
+        <p class="sidebar-label">CAPAS ACTIVAS</p>
+
+        <button class="nav-button active" id="btnCercanias">
+          <img src="img/cercanias.svg" class="nav-logo" />
+          <span>Cercanías Madrid</span>
+        </button>
+
+        <button class="nav-button" id="btnMetro">
+          <img src="img/metro.svg" class="nav-logo" />
+          <span>Metro Madrid</span>
+        </button>
+
+        <!-- PLANIFICADOR DE RUTAS -->
+        <div class="route-planner">
+          <p class="sidebar-label">PLANIFICAR VIAJE</p>
+
+          <div class="route-input-group">
+            <div class="route-input-wrapper">
+              <label class="route-label"
+                ><i class="fas fa-map-marker-alt" style="color: #0095ff"></i>
+                Origen</label
+              >
+              <select id="selectOrigen" class="route-select">
+                <option value="">Selecciona estación...</option>
+              </select>
+            </div>
+
+            <button id="btnSwapStations" class="btn-swap" title="Intercambiar">
+              <i class="fas fa-exchange-alt"></i>
+            </button>
+
+            <div class="route-input-wrapper">
+              <label class="route-label"
+                ><i class="fas fa-map-marker-alt" style="color: #e60000"></i>
+                Destino</label
+              >
+              <select id="selectDestino" class="route-select">
+                <option value="">Selecciona estación...</option>
+              </select>
+            </div>
+          </div>
+
+          <button id="btnCalcularRuta" class="btn-calculate-route">
+            <i class="fas fa-route"></i> Calcular Ruta
+          </button>
+
+          <div id="routeResult" class="route-result" style="display: none">
+            <!-- Aquí se mostrará el resultado -->
+          </div>
+        </div>
+
+        <div id="cercanias-legend" class="legend-container">
+          <div class="legend-header">
+            <p class="sidebar-label">LÍNEAS CERCANÍAS</p>
+            <button id="btnResetFilter" class="btn-reset-filter">
+              Ver todas
+            </button>
+          </div>
+          <div class="legend-grid">
+            <div class="legend-line-item" data-line="C1">
+              <span class="line-color" style="background: #0095ff"></span>
+              <span class="line-name">C-1</span>
+            </div>
+            <div class="legend-line-item" data-line="C2">
+              <span class="line-color" style="background: #00943d"></span>
+              <span class="line-name">C-2</span>
+            </div>
+            <div class="legend-line-item" data-line="C3">
+              <span class="line-color" style="background: #952585"></span>
+              <span class="line-name">C-3</span>
+            </div>
+            <div class="legend-line-item" data-line="C4a">
+              <span class="line-color" style="background: #2c2a86"></span>
+              <span class="line-name">C-4a</span>
+            </div>
+            <div class="legend-line-item" data-line="C4b">
+              <span class="line-color" style="background: #2c2a86"></span>
+              <span class="line-name">C-4b</span>
+            </div>
+            <div class="legend-line-item" data-line="C5">
+              <span class="line-color" style="background: #fecb00"></span>
+              <span class="line-name">C-5</span>
+            </div>
+            <div class="legend-line-item" data-line="C7">
+              <span class="line-color" style="background: #e5202a"></span>
+              <span class="line-name">C-7</span>
+            </div>
+            <div class="legend-line-item" data-line="C8a">
+              <span class="line-color" style="background: #868584"></span>
+              <span class="line-name">C-8a</span>
+            </div>
+            <div class="legend-line-item" data-line="C8b">
+              <span class="line-color" style="background: #868584"></span>
+              <span class="line-name">C-8b</span>
+            </div>
+            <div class="legend-line-item" data-line="C9">
+              <span class="line-color" style="background: #936037"></span>
+              <span class="line-name">C-9</span>
+            </div>
+            <div class="legend-line-item" data-line="C10">
+              <span class="line-color" style="background: #bccf00"></span>
+              <span class="line-name">C-10</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="metro-legend" class="legend-container" style="display: none">
+          <div class="legend-header">
+            <p class="sidebar-label">LÍNEAS METRO</p>
+            <button id="btnResetMetroFilter" class="btn-reset-filter">
+              Ver todas
+            </button>
+          </div>
+          <div class="legend-grid">
+            <div class="legend-line-item" data-line="1">
+              <span class="line-color" style="background: #009bd5"></span>
+              <span class="line-name">L-1</span>
+            </div>
+            <div class="legend-line-item" data-line="2">
+              <span class="line-color" style="background: #ef0000"></span>
+              <span class="line-name">L-2</span>
+            </div>
+            <div class="legend-line-item" data-line="3">
+              <span class="line-color" style="background: #ffcc00"></span>
+              <span class="line-name">L-3</span>
+            </div>
+            <div class="legend-line-item" data-line="4">
+              <span class="line-color" style="background: #a55d35"></span>
+              <span class="line-name">L-4</span>
+            </div>
+            <div class="legend-line-item" data-line="5">
+              <span class="line-color" style="background: #93c01f"></span>
+              <span class="line-name">L-5</span>
+            </div>
+            <div class="legend-line-item" data-line="6">
+              <span class="line-color" style="background: #989898"></span>
+              <span class="line-name">L-6</span>
+            </div>
+            <div class="legend-line-item" data-line="7">
+              <span class="line-color" style="background: #f58f00"></span>
+              <span class="line-name">L-7</span>
+            </div>
+            <div class="legend-line-item" data-line="8">
+              <span class="line-color" style="background: #ff66cc"></span>
+              <span class="line-name">L-8</span>
+            </div>
+            <div class="legend-line-item" data-line="9">
+              <span class="line-color" style="background: #a900a9"></span>
+              <span class="line-name">L-9</span>
+            </div>
+            <div class="legend-line-item" data-line="10">
+              <span class="line-color" style="background: #001a94"></span>
+              <span class="line-name">L-10</span>
+            </div>
+            <div class="legend-line-item" data-line="11">
+              <span class="line-color" style="background: #006633"></span>
+              <span class="line-name">L-11</span>
+            </div>
+            <div class="legend-line-item" data-line="12">
+              <span class="line-color" style="background: #a39300"></span>
+              <span class="line-name">L-12</span>
+            </div>
+            <div class="legend-line-item" data-line="R">
+              <span class="line-color" style="background: #6e98c3"></span>
+              <span class="line-name">R</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-footer">
+          <p>Haz clic en las estaciones para ver detalles.</p>
+        </div>
+      </aside>
+
+      <section class="map-section">
+        <iframe
+          id="mapFrame"
+          src="mapa-cercanias.html"
+          frameborder="0"
+          class="map-iframe"
+        ></iframe>
+      </section>
+    </main>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
