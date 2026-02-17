@@ -37,23 +37,23 @@ document.addEventListener("DOMContentLoaded", () => {
     btnCercanias.addEventListener("click", () => {
       console.log("🖱️ Click en botón Cercanías");
 
-      const isActive = btnCercanias.classList.toggle("active");
-      console.log("Estado activo:", isActive);
+      if (btnCercanias.classList.contains("active")) return;
+      btnCercanias.classList.add("active");
+      btnCercanias.style.filter = "none";
 
       // Actualizar UI
-      if (legend) legend.style.display = isActive ? "block" : "none";
-      if (isActive && metroLegend) {
-        metroLegend.style.display = "none";
-        btnMetro.classList.remove("active");
-        btnMetro.style.filter = "grayscale(1)";
-      }
-      btnCercanias.style.filter = isActive ? "none" : "grayscale(1)";
+      if (legend) legend.style.display = "block";
+
+      // Desactivar Metro
+      if (metroLegend) metroLegend.style.display = "none";
+      btnMetro.classList.remove("active");
+      btnMetro.style.filter = "grayscale(1)";
 
       // Enviar mensaje al iframe
       if (iframeReady && mapFrame.contentWindow) {
-        console.log("📤 Enviando mensaje TOGGLE_LAYER al iframe:", isActive);
+        console.log("📤 Enviando mensaje TOGGLE_LAYER (cercanias) al iframe");
         mapFrame.contentWindow.postMessage(
-          { type: "TOGGLE_LAYER", visible: isActive },
+          { type: "TOGGLE_LAYER", mode: "cercanias" },
           "*",
         );
       }
@@ -65,22 +65,23 @@ document.addEventListener("DOMContentLoaded", () => {
     btnMetro.addEventListener("click", () => {
       console.log("🖱️ Click en botón Metro");
 
-      const isActive = btnMetro.classList.toggle("active");
+      if (btnMetro.classList.contains("active")) return;
+      btnMetro.classList.add("active");
+      btnMetro.style.filter = "none";
 
       // Actualizar UI
-      if (metroLegend) metroLegend.style.display = isActive ? "block" : "none";
-      if (isActive && legend) {
-        legend.style.display = "none";
-        btnCercanias.classList.remove("active");
-        btnCercanias.style.filter = "grayscale(1)";
-      }
-      btnMetro.style.filter = isActive ? "none" : "grayscale(1)";
+      if (metroLegend) metroLegend.style.display = "block";
+
+      // Desactivar Cercanías
+      if (legend) legend.style.display = "none";
+      btnCercanias.classList.remove("active");
+      btnCercanias.style.filter = "grayscale(1)";
 
       // Enviar mensaje al iframe
       if (iframeReady && mapFrame.contentWindow) {
-        console.log("📤 Enviando mensaje TOGGLE_METRO al iframe:", isActive);
+        console.log("📤 Enviando mensaje TOGGLE_LAYER (metro) al iframe");
         mapFrame.contentWindow.postMessage(
-          { type: "TOGGLE_METRO", visible: isActive },
+          { type: "TOGGLE_LAYER", mode: "metro" },
           "*",
         );
       }
@@ -193,7 +194,7 @@ document.addEventListener("DOMContentLoaded", () => {
       scheduleContainer.innerHTML = `
         <div class="schedule-header">PRÓXIMAS SALIDAS</div>
         <div class="schedule-list">${listHtml}</div>
-        <button class="btn-see-more" onclick="alert('Funcionalidad no implementada aún')">Ver más</button>
+        <button class="btn-see-more" onclick="Toast.show('Funcionalidad no implementada aún', 'info')">Ver más</button>
       `;
     });
   }

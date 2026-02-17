@@ -170,133 +170,217 @@ function getHoverStationStyle(feature, resolution) {
 }
 
 // Función para mostrar detalles de estación
-function mostrarDetallesEstacion(feature, coordinate) {
-  console.log("📍 Estación seleccionada:", feature.getProperties());
-
-  // Título
-  const nombre =
-    feature.get("NOMBRE_ESTACION") ||
-    feature.get("DENOMINACIONESTACION") ||
-    feature.get("ROTULO") ||
-    "Estación desconocida";
-  contentTitle.textContent = nombre;
-
-  // Accesibilidad
-  const accesibilidad = feature.get("ACCESIBILIDAD") || "No especificada";
-  if (accArea) {
-    accArea.innerHTML = `<div class="accessibility-info">♿ ${accesibilidad}</div>`;
-  }
-
-  // Líneas de Cercanías
-  const lineasC = feature.get("LINEAS");
-  if (lineasC) {
-    contentC.innerHTML = "";
-    lineasC.split(",").forEach((linea) => {
-      const lineaLimpia = linea.trim();
-      const logo = document.createElement("span");
-      logo.className = "line-logo";
-      logo.textContent = lineaLimpia;
-      logo.title = `Línea ${lineaLimpia}`;
-      contentC.appendChild(logo);
-    });
-  }
-
-  // Líneas de Metro
-  const lineasM = feature.get("LINEAS_METRO");
-  if (lineasM && metroSection) {
-    const logos = parseMetroLogos(lineasM);
-    metroSection.style.display = logos.length > 0 ? "block" : "none";
-    metroLogos.innerHTML = "";
-    logos.forEach((logo) => {
-      const span = document.createElement("span");
-      span.className = "line-logo metro-logo";
-      span.textContent = logo;
-      span.title = `Línea ${logo}`;
-      metroLogos.appendChild(span);
-    });
-  }
-
-  // Cargar horarios
-  const codigoEstacion = feature.get("CODIGO_ESTACION");
-  if (codigoEstacion) {
-    cargarHorarios(codigoEstacion);
-  }
-
-  // Mostrar popup
-  overlay.setPosition(coordinate);
-}
-
-// Event listeners para capas
-function setupLayerInteractions() {
-  // Cercanías
-  if (stationLayer) {
-    map.on("click", function (evt) {
-      const feature = map.forEachFeatureAtPixel(
-        evt.pixel,
-        function (feature) {
-          return feature;
-        },
-        { layers: [stationLayer] },
-      );
-
-      if (feature) {
-        mostrarDetallesEstacion(feature, evt.coordinate);
-      } else {
-        overlay.setPosition(undefined);
-      }
-    });
-  }
-
-  // Metro
-  if (metroStationLayer) {
-    map.on("click", function (evt) {
-      const feature = map.forEachFeatureAtPixel(
-        evt.pixel,
-        function (feature) {
-          return feature;
-        },
-        { layers: [metroStationLayer] },
-      );
-
-      if (feature) {
-        mostrarDetallesEstacion(feature, evt.coordinate);
-      }
-    });
-  }
-
-  // Hover effects
-  map.on("pointermove", function (evt) {
-    const pixel = map.getEventPixel(evt.originalEvent);
-    const hit = map.hasFeatureAtPixel(pixel, {
-      layers: [stationLayer, metroStationLayer],
-    });
-    map.getTarget().style.cursor = hit ? "pointer" : "";
-  });
-}
-
-// Cerrar popup
-if (closer) {
-  closer.addEventListener("click", function () {
-    overlay.setPosition(undefined);
-  });
-}
-
-// Inicializar
-setupLayerInteractions();
-
-// Exportar para uso externo
-export { cargarHorarios, parseMetroLogos, mostrarDetallesEstacion };
-
-// --- LOGICA DE INCIDENCIAS (NUEVO) ---
-let incidentLayer = null;
-
+// --- LAYER TOGGLING & MESSAGES ---
 window.addEventListener("message", (event) => {
-  if (event.data.type === "SHOW_INCIDENTS") {
-    showIncidents(event.data.incidents);
+  const data = event.data;
+
+  if (data.type === "SHOW_INCIDENTS") {
+    showIncidents(data.incidents);
+  }
+
+  if (data.type === "TOGGLE_LAYER") {
+    const mode = data.mode; // 'cercanias' or 'metro'
+
+    if (mode === "cercanias") {
+      if (stationLayer) stationLayer.setVisible(true);
+      if (lineLayer) lineLayer.setVisible(true);
+      if (metroStationLayer) metroStationLayer.setVisible(false);
+      if (metroLineLayer) metroLineLayer.setVisible(false);
+    } else if (mode === "metro") {
+      if (stationLayer) stationLayer.setVisible(false);
+      if (lineLayer) lineLayer.setVisible(false);
+      if (metroStationLayer) metroStationLayer.setVisible(true);
+      if (metroLineLayer) metroLineLayer.setVisible(true);
+    }
   }
 });
 
+// --- LAYER TOGGLING ---
+const btnCercanias = document.getElementById("btnCercanias");
+const btnMetro = document.getElementById("btnMetro");
+
+if (btnCercanias && btnMetro) {
+  btnCercanias.addEventListener("click", () => {
+    // Activar Cercanías
+    btnCercanias.classList.add("active");
+    btnMetro.classList.remove("active");
+
+    // Toggle Layers
+    if (stationLayer) stationLayer.setVisible(true);
+    if (lineLayer) lineLayer.setVisible(true);
+    if (metroStationLayer) metroStationLayer.setVisible(false);
+    if (metroLineLayer) metroLineLayer.setVisible(false);
+
+    // Ocultar leyenda metro, mostrar cercanías
+    document.getElementById("cercanias-legend").style.display = "block";
+    document.getElementById("metro-legend").style.display = "none";
+  });
+
+  btnMetro.addEventListener("click", () => {
+    // Activar Metro
+    btnCercanias.classList.remove("active");
+    btnMetro.classList.add("active");
+
+    // Toggle Layers
+    if (stationLayer) stationLayer.setVisible(false);
+    if (lineLayer) lineLayer.setVisible(false);
+    if (metroStationLayer) metroStationLayer.setVisible(true);
+    if (metroLineLayer) metroLineLayer.setVisible(true);
+
+    // Ocultar leyenda cercanías, mostrar metro
+    document.getElementById("cercanias-legend").style.display = "none";
+    document.getElementById("metro-legend").style.display = "block";
+  });
+}
+
+// Almacén de incidencias para consultar en popup
+let currentIncidents = [];
+
+// Función para mostrar detalles de estación
+function mostrarDetallesEstacion(feature, coordinate) {
+  const props = feature.getProperties();
+  console.log("📍 Estación:", props);
+
+  // 1. Identificar Estación
+  const nombre =
+    props.NOMBRE_ESTACION ||
+    props.DENOMINACIONESTACION ||
+    props.ROTULO ||
+    "Estación";
+
+  // 2. Buscar Incidencias Activas
+  const incidencia = currentIncidents.find(
+    (inc) =>
+      inc.estacion && nombre.toLowerCase().includes(inc.estacion.toLowerCase()),
+  );
+
+  // 3. Construir Contenido Popup
+  let html = "";
+
+  // HEADER (Con indicador de incidencia si hay)
+  if (incidencia) {
+    html += `
+        <div class="popup-alert">
+            <div class="popup-alert-header">
+                <i class="fas fa-exclamation-triangle"></i> INCIDENCIA ACTIVA
+            </div>
+            <div class="popup-alert-body">
+                <strong>${incidencia.titulo}</strong><br>
+                ${incidencia.descripcion}
+            </div>
+        </div>
+      `;
+  }
+
+  html += `<h3 id="popup-title">${nombre}</h3>`;
+
+  // LÍNEAS (Logos SVG)
+  html += `<div class="popup-lines">`;
+
+  // Cercanías (Texto/Badge por ahora, no hay SVGs)
+  const lineasC = props.LINEAS;
+  if (lineasC) {
+    lineasC.split(",").forEach((l) => {
+      const lClean = l.trim();
+      // Intentar colores específicos o default
+      let color = "#E60000"; // Default Cercanías Red
+      if (lClean === "C1") color = "#0095FF";
+      if (lClean === "C2") color = "#00943D";
+      if (lClean === "C3") color = "#952585";
+      if (lClean === "C4a" || lClean === "C4b") color = "#2C2A86";
+      if (lClean === "C5") color = "#FECB00";
+      if (lClean === "C7") color = "#E60000";
+      if (lClean === "C8" || lClean === "C8a" || lClean === "C8b")
+        color = "#868584";
+      if (lClean === "C9") color = "#936037";
+      if (lClean === "C10") color = "#BCCF00";
+
+      html += `<span class="badge-cercanias" style="background:${color}">${lClean}</span>`;
+    });
+  }
+
+  // Metro (SVG Iconos)
+  const lineasM = props.LINEAS_METRO;
+  if (lineasM) {
+    const logos = parseMetroLogos(lineasM);
+    logos.forEach((logo) => {
+      // logo es "L1", "L10", "R", etc.
+      // Mapear a nombre de archivo: L1 -> L1.svg
+      const fileName = `${logo}.svg`;
+      html += `<img src="img/${fileName}" class="line-logo-svg" alt="${logo}" title="Metro ${logo}">`;
+    });
+  }
+  html += `</div>`;
+
+  // ACCESIBILIDAD
+  const accesibilidad = props.ACCESIBILIDAD || "No especificada";
+  // Convertir 0/1 a Icono si es necesario, o usar texto
+  if (
+    accesibilidad === "1" ||
+    accesibilidad === 1 ||
+    accesibilidad === "Si" ||
+    accesibilidad.includes("Si")
+  ) {
+    html += `<div class="popup-info"><i class="fas fa-wheelchair" title="Accesible"></i> Estación Accesible</div>`;
+  }
+
+  // CONTENEDOR DE HORARIOS
+  html += `<div id="live-times-area" class="live-times-area"></div>`;
+
+  container.innerHTML = html;
+
+  // Re-capturar referencia para cargar horarios
+  const liveAreaRef = document.getElementById("live-times-area");
+
+  // Cargar horarios
+  const codigoEstacion = props.CODIGO_ESTACION;
+  if (codigoEstacion) {
+    cargarHorariosEnElemento(codigoEstacion, liveAreaRef);
+  } else {
+    // Si es metro, no tenemos API real de horarios en este demo
+    if (props.DENOMINACIONESTACION) {
+      liveAreaRef.innerHTML =
+        '<small style="color:#aaa;">Horarios en tiempo real no disponibles para Metro.</small>';
+    }
+  }
+
+  overlay.setPosition(coordinate);
+}
+
+// Nueva función que acepta el elemento donde renderizar
+async function cargarHorariosEnElemento(codigoEstacion, element) {
+  if (!element) return;
+  element.innerHTML =
+    '<div class="loading-text"><i class="fas fa-sync fa-spin"></i> Cargando trenes...</div>';
+
+  try {
+    const data = await fetchHorarios(codigoEstacion);
+    if (!data || data.length === 0) {
+      element.innerHTML = '<div class="no-data">Sin servicio inminente.</div>';
+      return;
+    }
+
+    let html = '<div class="train-list">';
+    data.slice(0, 4).forEach((tren) => {
+      const mins = tren.minutos;
+      const isNow = mins === 0 || mins === "0";
+      html += `
+                <div class="train-item">
+                    <div class="train-dest">${tren.destino}</div>
+                    <div class="train-time ${isNow ? "now" : ""}">${isNow ? "AHORA" : mins + " min"}</div>
+                </div>
+             `;
+    });
+    html += "</div>";
+    element.innerHTML = html;
+  } catch (e) {
+    element.innerHTML = '<div class="error-text">Error de conexión</div>';
+  }
+}
+
 function showIncidents(incidents) {
+  currentIncidents = incidents || []; // Guardar para uso en popup
+
   if (!incidents || incidents.length === 0) return;
 
   if (!incidentLayer) {
@@ -304,80 +388,108 @@ function showIncidents(incidents) {
       source: new ol.source.Vector(),
       style: new ol.style.Style({
         image: new ol.style.Circle({
-          radius: 12,
+          radius: 8,
           fill: new ol.style.Fill({ color: "#ff4444" }),
-          stroke: new ol.style.Stroke({ color: "white", width: 3 }),
-        }),
-        text: new ol.style.Text({
-          text: "!",
-          fill: new ol.style.Fill({ color: "white" }),
-          font: "bold 16px sans-serif",
-          offsetY: 1,
+          stroke: new ol.style.Stroke({ color: "white", width: 2 }),
         }),
       }),
-      zIndex: 1000, // Por encima de todo
+      zIndex: 1000,
     });
     map.addLayer(incidentLayer);
-
-    // Añadir interacción de click para incidencias
-    map.on("click", (evt) => {
-      const feature = map.forEachFeatureAtPixel(evt.pixel, (f) => f, {
-        layers: [incidentLayer],
-      });
-      if (feature) {
-        const props = feature.getProperties();
-        // alert(`⚠️ INCIDENCIA: ${props.titulo}\n\n${props.descripcion}\nReportado por: ${props.usuario}`);
-        Toast.show(
-          `<b>${props.titulo}</b><br>${props.descripcion}<br><small>Por: ${props.usuario}</small>`,
-          "warning",
-        );
-      }
-    });
   }
 
   const source = incidentLayer.getSource();
   source.clear();
 
-  // Buscar coordenadas de las estaciones afectadas
-  // Recorremos las capas de estaciones para encontrar coincidencias por nombre
+  // Buscar coordenadas
   const featuresGeneradas = [];
-
   const todasEstaciones = [
     ...(stationLayer ? stationLayer.getSource().getFeatures() : []),
     ...(metroStationLayer ? metroStationLayer.getSource().getFeatures() : []),
   ];
 
   incidents.forEach((inc) => {
-    // Normalizar nombres para comparar
     const nombreBusqueda = inc.estacion.toLowerCase().trim();
-
     const estacionFeature = todasEstaciones.find((f) => {
       const nombre = (
         f.get("NOMBRE_ESTACION") ||
         f.get("DENOMINACIONESTACION") ||
-        f.get("ROTULO") ||
         ""
-      )
-        .toLowerCase()
-        .trim();
-      return nombre.includes(nombreBusqueda) || nombreBusqueda.includes(nombre);
+      ).toLowerCase();
+      return nombre.includes(nombreBusqueda);
     });
 
     if (estacionFeature) {
       const coords = estacionFeature.getGeometry().getCoordinates();
+      // Marcador visual simple para indicar que hay algo
       const incFeature = new ol.Feature({
         geometry: new ol.geom.Point(coords),
-        titulo: inc.titulo,
-        descripcion: inc.descripcion,
-        usuario: inc.usuarioNombre,
-        servicio: inc.servicio,
+        originalIncident: inc,
       });
       featuresGeneradas.push(incFeature);
     }
   });
 
   source.addFeatures(featuresGeneradas);
-  console.log(
-    `📍 Mostrando ${featuresGeneradas.length} incidencias en el mapa.`,
-  );
 }
+
+// Inicialización de Listeners básicos
+function setupLayerInteractions() {
+  map.on("pointermove", function (evt) {
+    if (evt.dragging) return;
+    const pixel = map.getEventPixel(evt.originalEvent);
+    const hit = map.hasFeatureAtPixel(pixel);
+    map.getTarget().style.cursor = hit ? "pointer" : "";
+  });
+
+  map.on("click", function (evt) {
+    // Prioridad: Incidencias -> Metro -> Cercanías
+    const feature = map.forEachFeatureAtPixel(
+      evt.pixel,
+      function (feature, layer) {
+        // Si tocamos un marcador de incidencia, queremos ver la estación subyacente
+        // O mostrar la incidencia directamente.
+        // En este diseño, la incidencia se muestra DENTRO del popup de la estación.
+        return feature;
+      },
+    );
+
+    if (feature) {
+      // Si es un feature de incidencia (punto rojo), buscamos la estación debajo o mostramos el popup de la estación
+      // Para simplificar, asumimos que el usuario hace click en la estación o cerca.
+
+      // Hack: si es feature de incidencia, no tiene propiedades de estación.
+      // Pero como están en la misma coordenada, el click debería pillar también la estación si ajustamos capas.
+      // Vamos a filtrar para obtener la feature de ESTACIÓN si existe.
+
+      const features = map.getFeaturesAtPixel(evt.pixel);
+      const stationFeature = features.find(
+        (f) => f.get("NOMBRE_ESTACION") || f.get("DENOMINACIONESTACION"),
+      );
+
+      if (stationFeature) {
+        mostrarDetallesEstacion(stationFeature, evt.coordinate);
+      } else {
+        overlay.setPosition(undefined);
+      }
+    } else {
+      overlay.setPosition(undefined);
+    }
+  });
+
+  // Cerrar popup
+  const closer = document.getElementById("popup-closer");
+  if (closer) {
+    closer.onclick = function () {
+      overlay.setPosition(undefined);
+      closer.blur();
+      return false;
+    };
+  }
+}
+
+setupLayerInteractions();
+export { cargarHorarios, parseMetroLogos, mostrarDetallesEstacion };
+
+// Escuchar mensajes (Manejado arriba)
+// window.addEventListener("message", ... );
